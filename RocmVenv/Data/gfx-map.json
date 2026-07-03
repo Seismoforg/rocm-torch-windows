@@ -1,0 +1,32 @@
+{
+  "_comment": "Maps AMD GPUs to ROCm gfx targets for TheRock multi-arch wheels. byName is matched case-insensitively as a substring against the Windows video controller name; the first match wins, so keep more specific entries first. byDeviceId is an optional, user-extensible map keyed by the 4-hex-digit PCI device id (0x....). 'targets' is the list offered for manual selection when auto-detection fails.",
+  "byName": [
+    { "match": "RX 9070", "target": "gfx1201", "arch": "RDNA4 (Navi 48)" },
+    { "match": "RX 9060", "target": "gfx1200", "arch": "RDNA4 (Navi 44)" },
+    { "match": "RX 7900", "target": "gfx1100", "arch": "RDNA3 (Navi 31)" },
+    { "match": "RX 7800", "target": "gfx1101", "arch": "RDNA3 (Navi 32)" },
+    { "match": "RX 7700", "target": "gfx1101", "arch": "RDNA3 (Navi 32)" },
+    { "match": "RX 7600", "target": "gfx1102", "arch": "RDNA3 (Navi 33)" },
+    { "match": "RX 6900", "target": "gfx1030", "arch": "RDNA2 (Navi 21)" },
+    { "match": "RX 6800", "target": "gfx1030", "arch": "RDNA2 (Navi 21)" },
+    { "match": "RX 6750", "target": "gfx1031", "arch": "RDNA2 (Navi 22)" },
+    { "match": "RX 6700", "target": "gfx1031", "arch": "RDNA2 (Navi 22)" },
+    { "match": "RX 6650", "target": "gfx1032", "arch": "RDNA2 (Navi 23)" },
+    { "match": "RX 6600", "target": "gfx1032", "arch": "RDNA2 (Navi 23)" }
+  ],
+  "byDeviceId": {},
+  "targets": [
+    "gfx1030",
+    "gfx1031",
+    "gfx1032",
+    "gfx1100",
+    "gfx1101",
+    "gfx1102",
+    "gfx1151",
+    "gfx1200",
+    "gfx1201",
+    "gfx942",
+    "gfx950",
+    "all"
+  ]
+}
