@@ -5,7 +5,7 @@
     Author            = 'rocm-venv-setup'
     Description       = 'One-click ROCm nightly + PyTorch virtual environment setup for Windows, reusable across projects.'
     PowerShellVersion = '5.1'
-    FunctionsToExport = @('Get-RocmGpuTarget', 'Initialize-RocmVenv', 'Invoke-RocmBenchmark')
+    FunctionsToExport = @('Get-RocmGpuTarget', 'Initialize-RocmVenv', 'Invoke-RocmBenchmark', 'Install-RocmBitsAndBytes')
     CmdletsToExport   = @()
     VariablesToExport = @()
     AliasesToExport   = @()

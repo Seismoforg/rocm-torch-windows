@@ -3,13 +3,16 @@
 One-click, reusable **ROCm nightly + PyTorch** virtual-environment bootstrap for
 Windows. Detects your AMD GPU, picks the matching `gfx` target, installs the
 ROCm libraries and PyTorch from [TheRock](https://github.com/ROCm/TheRock)'s
-multi-arch wheel index, verifies GPU visibility, and runs a short benchmark.
+multi-arch wheel index, adds a matching **bitsandbytes** (4-bit/8-bit
+quantization) build, verifies GPU visibility, and runs a short benchmark.
 
 ## Requirements
 
 - Windows with an AMD GPU that has ROCm-on-Windows support
 - Python **3.10–3.13** on `PATH` (PyTorch wheels target Torch 2.10–2.12)
 - Internet access to `https://rocm.nightlies.amd.com/whl-multi-arch/`
+- Internet access to the GitHub Releases API (for the bitsandbytes wheel;
+  optional — the step warns and continues if unavailable)
 
 ## Quick start
 
@@ -17,8 +20,8 @@ multi-arch wheel index, verifies GPU visibility, and runs a short benchmark.
 .\Install-RocmVenv.ps1
 ```
 
-This walks through five steps: detect GPU → create `.venv` → install ROCm +
-PyTorch → verify → benchmark. Common overrides:
+This walks through six steps: detect GPU → create `.venv` → install ROCm +
+PyTorch → install bitsandbytes → verify → benchmark. Common overrides:
 
 ```powershell
 # Force a specific target (skip auto-detection) and rebuild the venv
@@ -26,6 +29,9 @@ PyTorch → verify → benchmark. Common overrides:
 
 # Install ROCm only (no PyTorch), skip the benchmark
 .\Install-RocmVenv.ps1 -SkipTorch -SkipBenchmark
+
+# Skip the bitsandbytes step (torch only)
+.\Install-RocmVenv.ps1 -SkipBitsAndBytes
 ```
 
 If your GPU can't be auto-mapped, the script lists the known targets and asks
@@ -50,9 +56,10 @@ Invoke-RocmBenchmark -VenvPath .venv
 
 | Function              | Purpose                                                        |
 | --------------------- | -------------------------------------------------------------- |
-| `Get-RocmGpuTarget`   | Detect AMD GPU(s) and resolve the matching `gfx` target.       |
-| `Initialize-RocmVenv` | Full setup: detect → venv → install ROCm + PyTorch → verify.   |
-| `Invoke-RocmBenchmark`| Run the short FP32/FP16 matmul benchmark inside the venv.      |
+| `Get-RocmGpuTarget`      | Detect AMD GPU(s) and resolve the matching `gfx` target.    |
+| `Initialize-RocmVenv`    | Full setup: detect → venv → ROCm + PyTorch → bnb → verify.  |
+| `Invoke-RocmBenchmark`   | Run the short FP32/FP16 matmul benchmark inside the venv.   |
+| `Install-RocmBitsAndBytes`| Install a matching community bitsandbytes wheel into a venv.|
 
 ## GPU → gfx mapping
 
@@ -75,6 +82,29 @@ Based on TheRock's multi-arch index and `[device-<target>]` extras:
 pip install --index-url https://rocm.nightlies.amd.com/whl-multi-arch/ "rocm[libraries,device-gfx1201]"
 pip install --index-url https://rocm.nightlies.amd.com/whl-multi-arch/ "torch[device-gfx1201]" "torchvision[device-gfx1201]" torchaudio
 ```
+
+## bitsandbytes (4-bit / 8-bit quantization)
+
+Upstream `bitsandbytes` has no official Windows+ROCm wheel, so the installer
+pulls a matching build from the community fork
+[`0xDELUXA/bitsandbytes_win_rocm`](https://github.com/0xDELUXA/bitsandbytes_win_rocm).
+The wheel is selected **dynamically** from the fork's GitHub Releases by:
+
+- **ROCm minor** (from `torch.version.hip`): exact minor → nearest-lower minor →
+  generic `rocm7`; a higher minor than installed is rejected (ABI risk).
+- **CPython tag** (`cp312`, …): must match the wheel exactly.
+- **gfx coverage**: the `_all` variant (every gfx) is preferred over `_rdna`;
+  CDNA targets (`gfx9xx`) require `_all`.
+
+The source and ranking rules live in
+[`RocmVenv/Data/bnb-source.json`](RocmVenv/Data/bnb-source.json) — change the repo
+or preferences there without touching code. Set `GITHUB_TOKEN` to raise the
+API rate limit. After install, a 4-bit `Linear` GPU matmul smoke-tests the build.
+
+Caveats: these are community `dev0` wheels pinned to a specific ROCm+gfx+Python
+combination. If no match is found (or the API is offline / rate-limited), the
+step **warns and continues** — PyTorch stays fully usable and only `bitsandbytes`
+is absent. Opt out entirely with `-SkipBitsAndBytes`.
 
 ## Notes
 

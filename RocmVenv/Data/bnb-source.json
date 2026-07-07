@@ -1,0 +1,6 @@
+{
+  "_comment": "Source + selection rules for the community bitsandbytes ROCm/Windows wheels. 'repo' is the GitHub owner/name; 'apiUrl' is the releases endpoint (per_page kept high so a single call covers the fork's history). 'buildPreference' ranks the gfx-coverage variant parsed from each release tag: 'all' covers every gfx (incl. CDNA), 'rdna' covers RDNA (gfx10xx/11xx/12xx) only - so 'all' first. Change the source or rules here without touching code.",
+  "repo": "0xDELUXA/bitsandbytes_win_rocm",
+  "apiUrl": "https://api.github.com/repos/0xDELUXA/bitsandbytes_win_rocm/releases?per_page=100",
+  "buildPreference": ["all", "rdna"]
+}

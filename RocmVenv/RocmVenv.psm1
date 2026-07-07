@@ -17,6 +17,8 @@ function Initialize-RocmVenv {
         Recreate the venv even if it already exists.
     .PARAMETER SkipTorch
         Install only the ROCm libraries, not PyTorch.
+    .PARAMETER SkipBitsAndBytes
+        Do not install the community bitsandbytes (4-bit/8-bit quant) wheel.
     .EXAMPLE
         Initialize-RocmVenv
     .EXAMPLE
@@ -28,10 +30,11 @@ function Initialize-RocmVenv {
         [string[]] $Target,
         [string]   $PythonExe = 'python',
         [switch]   $Force,
-        [switch]   $SkipTorch
+        [switch]   $SkipTorch,
+        [switch]   $SkipBitsAndBytes
     )
 
-    Write-Host '[1/5] Detecting GPU and gfx target ...'
+    Write-Host '[1/6] Detecting GPU and gfx target ...'
     $targets = @()
     if ($Target) {
         $targets = $Target
@@ -48,20 +51,31 @@ function Initialize-RocmVenv {
         }
     }
 
-    Write-Host '[2/5] Preparing virtual environment ...'
+    Write-Host '[2/6] Preparing virtual environment ...'
     $venvPython = New-RocmVenv -VenvPath $VenvPath -PythonExe $PythonExe -Force:$Force
 
-    Write-Host '[3/5] Installing ROCm + PyTorch ...'
+    Write-Host '[3/6] Installing ROCm + PyTorch ...'
     Install-RocmPackages -VenvPython $venvPython -Targets $targets -SkipTorch:$SkipTorch
 
-    Write-Host '[4/5] Verifying ...'
+    Write-Host '[4/6] Installing bitsandbytes (quantization) ...'
+    # No torch -> no hip version to match, so bnb is skipped alongside -SkipTorch.
+    $bnb = $null
+    if ($SkipTorch -or $SkipBitsAndBytes) {
+        Write-Host '  Skipped.'
+    } else {
+        $primary = @($targets)[0]
+        $bnb = Install-RocmBitsAndBytes -VenvPython $venvPython -Target $primary
+    }
+
+    Write-Host '[5/6] Verifying ...'
     $ok = if ($SkipTorch) { $true } else { Test-RocmInstall -VenvPython $venvPython }
 
-    Write-Host '[5/5] Done.'
+    Write-Host '[6/6] Done.'
     return [pscustomobject]@{
-        VenvPython = $venvPython
-        Targets    = $targets
-        Verified   = $ok
+        VenvPython   = $venvPython
+        Targets      = $targets
+        Verified     = $ok
+        BitsAndBytes = $bnb
     }
 }
 
@@ -90,4 +104,4 @@ function Invoke-RocmBenchmark {
     }
 }
 
-Export-ModuleMember -Function Get-RocmGpuTarget, Initialize-RocmVenv, Invoke-RocmBenchmark
+Export-ModuleMember -Function Get-RocmGpuTarget, Initialize-RocmVenv, Invoke-RocmBenchmark, Install-RocmBitsAndBytes

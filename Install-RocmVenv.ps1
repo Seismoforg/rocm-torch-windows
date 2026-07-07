@@ -21,6 +21,8 @@
     Recreate the venv even if it exists.
 .PARAMETER SkipTorch
     Install only ROCm libraries, not PyTorch.
+.PARAMETER SkipBitsAndBytes
+    Skip installing the community bitsandbytes (4-bit/8-bit quant) wheel.
 .PARAMETER SkipBenchmark
     Skip the performance benchmark at the end.
 #>
@@ -31,6 +33,7 @@ param(
     [string]   $PythonExe = 'python',
     [switch]   $Force,
     [switch]   $SkipTorch,
+    [switch]   $SkipBitsAndBytes,
     [switch]   $SkipBenchmark
 )
 
@@ -58,7 +61,7 @@ if (-not $Target) {
 }
 
 $result = Initialize-RocmVenv -VenvPath $VenvPath -Target $Target `
-    -PythonExe $PythonExe -Force:$Force -SkipTorch:$SkipTorch
+    -PythonExe $PythonExe -Force:$Force -SkipTorch:$SkipTorch -SkipBitsAndBytes:$SkipBitsAndBytes
 
 Write-Host ''
 if (-not $SkipTorch -and -not $SkipBenchmark) {
@@ -70,4 +73,8 @@ Write-Host ''
 Write-Host 'Setup complete.' -ForegroundColor Green
 Write-Host "  venv    : $VenvPath"
 Write-Host "  targets : $($result.Targets -join ', ')"
+if ($result.BitsAndBytes) {
+    $bnbMsg = if ($result.BitsAndBytes.Installed) { "bitsandbytes $($result.BitsAndBytes.Version)" } else { "not installed ($($result.BitsAndBytes.Reason))" }
+    Write-Host "  quant   : $bnbMsg"
+}
 Write-Host "  activate: $VenvPath\Scripts\Activate.ps1"
